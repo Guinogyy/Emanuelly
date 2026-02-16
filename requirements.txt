@@ -1,3 +1,2 @@
-flet
-flet_audio
-flet_lottie
+PySide6
+pygame
