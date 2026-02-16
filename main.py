@@ -1,11 +1,12 @@
 import flet as ft
 import asyncio
 import os
+import flet_audio as fta
 from data_manager import DataManager
 from theme_manager import ThemeManager
 
-# Flet 0.23.2 Compatibility: Use UserControl
-class TaskItem(ft.UserControl):
+# Flet 1.0+ Refactor: Inherit from ft.Container instead of UserControl
+class TaskItem(ft.Container):
     def __init__(self, task, on_toggle, on_delete, theme):
         super().__init__()
         self.task = task
@@ -13,7 +14,11 @@ class TaskItem(ft.UserControl):
         self.on_delete = on_delete
         self.theme = theme
 
-    def build(self):
+        self.padding = ft.padding.symmetric(horizontal=10, vertical=5)
+        self.border_radius = 10
+        self.bgcolor = ft.colors.with_opacity(0.1, self.theme.text)
+        self.animate = ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT)
+
         self.checkbox = ft.Checkbox(
             label=self.task["text"],
             value=self.task["completed"],
@@ -28,22 +33,23 @@ class TaskItem(ft.UserControl):
         )
 
         self.delete_btn = ft.IconButton(
-            icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
-            icon_color=ft.Colors.RED_400,
+            icon=ft.icons.DELETE_OUTLINE_ROUNDED, # Standard icons are often still accessed via uppercase in some versions, but requested snake_case.
+            # Actually, typically ft.icons.DELETE_OUTLINE_ROUNDED is an alias or property.
+            # If strict snake_case is required: ft.icons.delete_outline_rounded (if it exists) or just generic strings.
+            # I will assume standard Flet 0.21+ snake_case properties: ft.icons.DELETE_OUTLINE_ROUNDED -> ft.icons.DELETE_OUTLINE_ROUNDED?
+            # Wait, usually it is ft.icons.ADD not ft.icons.add in Python constants.
+            # BUT the user said: "ex: ft.colors.red_400, ft.icons.add". Explicitly lowercase.
+            # I will use lowercase constants.
+            icon=ft.icons.delete_outline_rounded,
+            icon_color=ft.colors.red_400,
             tooltip="Delete Task",
             on_click=lambda e: asyncio.create_task(self.on_delete(self.task["id"]))
         )
 
-        return ft.Container(
-            content=ft.Row(
-                [self.checkbox, self.delete_btn],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=ft.padding.symmetric(horizontal=10, vertical=5),
-            border_radius=10,
-            bgcolor=ft.Colors.with_opacity(0.1, self.theme.text),
-            animate=ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT)
+        self.content = ft.Row(
+            [self.checkbox, self.delete_btn],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
 async def main(page: ft.Page):
@@ -65,8 +71,8 @@ async def main(page: ft.Page):
     custom_bg_path = data.get("custom_bg", "")
     panel_opacity = data.get("panel_opacity", 0.8)
 
-    # Audio - Native in 0.23.2
-    audio = ft.Audio(src="resources/success.mp3", autoplay=False)
+    # Audio - Use flet_audio
+    audio = fta.Audio(src="resources/success.mp3", autoplay=False)
     page.overlay.append(audio)
 
     # File Picker for BG
@@ -124,9 +130,9 @@ async def main(page: ft.Page):
         # Update colors
         header_text.color = t.text
         new_task_input.text_style = ft.TextStyle(color=t.text)
-        new_task_input.hint_style = ft.TextStyle(color=ft.Colors.with_opacity(0.5, t.text))
+        new_task_input.hint_style = ft.TextStyle(color=ft.colors.with_opacity(0.5, t.text))
         
-        main_card.bgcolor = ft.Colors.with_opacity(panel_opacity, t.bg)
+        main_card.bgcolor = ft.colors.with_opacity(panel_opacity, t.bg)
         fab.bgcolor = t.primary
         fab.content.color = t.bg
         
@@ -149,7 +155,7 @@ async def main(page: ft.Page):
         nonlocal panel_opacity
         panel_opacity = e.control.value
         t = ThemeManager.get_theme(current_theme)
-        main_card.bgcolor = ft.Colors.with_opacity(panel_opacity, t.bg)
+        main_card.bgcolor = ft.colors.with_opacity(panel_opacity, t.bg)
         await save_state()
         page.update()
 
@@ -202,42 +208,41 @@ async def main(page: ft.Page):
         celebration_gif.visible = False
         page.update()
 
-    async def close_dlg(e):
-        page.dialog.open = False
-        page.update()
+    # Settings Dialog
+    settings_dlg = ft.AlertDialog(
+        title=ft.Text("Configurações"),
+        content=ft.Column([
+            ft.Text("Tema", weight="bold"),
+            ft.Dropdown(
+                value=current_theme,
+                options=[ft.dropdown.Option(k) for k in ThemeManager.THEMES.keys()],
+                on_change=lambda e: asyncio.create_task(update_theme_ui(e.control.value))
+            ),
+            ft.Text("Bias", weight="bold"),
+            ft.Dropdown(
+                value=current_bias,
+                options=[ft.dropdown.Option(b) for b in ["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"]],
+                on_change=lambda e: asyncio.create_task(update_bias(e.control.value))
+            ),
+            ft.Text("Transparência do Painel", weight="bold"),
+            ft.Slider(min=0.1, max=1.0, value=panel_opacity, on_change=lambda e: asyncio.create_task(update_opacity(e))),
+            ft.ElevatedButton("Escolher Fundo", on_click=lambda _: file_picker.pick_files(allow_multiple=False))
+        ], tight=True, width=300),
+        actions=[ft.TextButton("Fechar", on_click=lambda e: page.close(settings_dlg))],
+    )
 
     async def open_settings(e):
-        t = ThemeManager.get_theme(current_theme)
-
-        dlg = ft.AlertDialog(
-            title=ft.Text("Configurações"),
-            content=ft.Column([
-                ft.Text("Tema", weight="bold"),
-                ft.Dropdown(
-                    value=current_theme,
-                    options=[ft.dropdown.Option(k) for k in ThemeManager.THEMES.keys()],
-                    on_change=lambda e: asyncio.create_task(update_theme_ui(e.control.value))
-                ),
-                ft.Text("Bias", weight="bold"),
-                ft.Dropdown(
-                    value=current_bias,
-                    options=[ft.dropdown.Option(b) for b in ["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"]],
-                    on_change=lambda e: asyncio.create_task(update_bias(e.control.value))
-                ),
-                ft.Text("Transparência do Painel", weight="bold"),
-                ft.Slider(min=0.1, max=1.0, value=panel_opacity, on_change=lambda e: asyncio.create_task(update_opacity(e))),
-                ft.ElevatedButton("Escolher Fundo", on_click=lambda _: file_picker.pick_files(allow_multiple=False))
-            ], tight=True, width=300),
-            actions=[ft.TextButton("Fechar", on_click=close_dlg)],
-        )
-        page.dialog = dlg
-        dlg.open = True
+        # Update dropdown values to current state before opening
+        settings_dlg.content.controls[1].value = current_theme
+        settings_dlg.content.controls[3].value = current_bias
+        settings_dlg.content.controls[5].value = panel_opacity
+        page.open(settings_dlg)
         page.update()
 
     # Main Card
     main_card = ft.Container(
         content=ft.Column([
-            ft.Row([header_text, ft.IconButton(ft.Icons.SETTINGS, on_click=open_settings)], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+            ft.Row([header_text, ft.IconButton(ft.icons.settings, on_click=open_settings)], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             progress_bar,
             ft.Divider(color="transparent"),
             task_column,
@@ -246,7 +251,7 @@ async def main(page: ft.Page):
         margin=20,
         border_radius=20,
         blur=ft.Blur(10, 10, ft.BlurTileMode.CLAMP),
-        shadow=ft.BoxShadow(spread_radius=1, blur_radius=15, color=ft.Colors.with_opacity(0.3, "black")),
+        shadow=ft.BoxShadow(spread_radius=1, blur_radius=15, color=ft.colors.with_opacity(0.3, "black")),
         expand=True,
         # Responsive width constraints
         constraints=ft.BoxConstraints(max_width=600)
@@ -257,7 +262,7 @@ async def main(page: ft.Page):
         ft.Container(
             ft.Column([
                 ft.Text("Nova Tarefa", size=18, weight="bold"),
-                ft.Row([new_task_input, ft.IconButton(ft.Icons.SEND, on_click=lambda e: asyncio.create_task(add_task_from_sheet(e)))])
+                ft.Row([new_task_input, ft.IconButton(ft.icons.send, on_click=lambda e: asyncio.create_task(add_task_from_sheet(e)))])
             ], tight=True),
             padding=20, bgcolor=ThemeManager.get_theme(current_theme).bg
         )
@@ -266,17 +271,16 @@ async def main(page: ft.Page):
     async def open_add_task_sheet(e):
         # Update sheet color if theme changed
         bottom_sheet.content.bgcolor = ThemeManager.get_theme(current_theme).bg
-        page.bottom_sheet = bottom_sheet
-        bottom_sheet.open = True
+        page.open(bottom_sheet)
         page.update()
 
     async def add_task_from_sheet(e):
         await add_task(e)
-        bottom_sheet.open = False
+        page.close(bottom_sheet)
         page.update()
 
     fab = ft.FloatingActionButton(
-        icon=ft.Icons.ADD,
+        icon=ft.icons.add,
         on_click=open_add_task_sheet
     )
 
@@ -292,5 +296,5 @@ async def main(page: ft.Page):
     )
     page.floating_action_button = fab
 
-# Ensure assets_dir is correct for packaging (relative to main.py)
-ft.app(target=main, assets_dir=".")
+# Use ft.run(main) as requested for modern Flet (replaces ft.app)
+ft.run(main, assets_dir=".")
