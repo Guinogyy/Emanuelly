@@ -1,302 +1,335 @@
-import sys
+import flet as ft
+import asyncio
 import os
-import pygame
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                             QLabel, QLineEdit, QPushButton, QProgressBar, QScrollArea,
-                             QCheckBox, QDialog, QComboBox, QSizePolicy, QGraphicsOpacityEffect)
-from PySide6.QtGui import QIcon, QFont, QMovie, QPainter, QColor, QPalette, QCursor
-from PySide6.QtCore import Qt, QSize, QTimer, Property, QPropertyAnimation, QEasingCurve, QUrl
 from data_manager import DataManager
 from theme_manager import ThemeManager
 
-class TaskItem(QWidget):
+# Modern Flet: Use Component class or just a function returning a Control
+# We'll use a class inheriting from ft.Container or ft.Column for composition
+class TaskItem(ft.Container):
     def __init__(self, task, on_toggle, on_delete, theme):
         super().__init__()
         self.task = task
         self.on_toggle = on_toggle
         self.on_delete = on_delete
         self.theme = theme
-        
-        layout = QHBoxLayout()
-        layout.setContentsMargins(10, 5, 10, 5)
-        
-        self.checkbox = QCheckBox(task["text"])
-        self.checkbox.setChecked(task["completed"])
-        self.checkbox.stateChanged.connect(self._toggle)
-        self.checkbox.setCursor(Qt.PointingHandCursor)
-        self.update_style()
 
-        self.delete_btn = QPushButton("🗑")
-        self.delete_btn.setObjectName("delete_btn")
-        self.delete_btn.setFixedSize(30, 30)
-        self.delete_btn.setCursor(Qt.PointingHandCursor)
-        self.delete_btn.clicked.connect(lambda: on_delete(task["id"]))
+        self.padding = ft.padding.symmetric(horizontal=10, vertical=5)
+        self.border_radius = 10
+        self.bgcolor = ft.Colors.with_opacity(0.1, self.theme.text)
+        self.animate = ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT)
 
-        layout.addWidget(self.checkbox)
-        layout.addStretch()
-        layout.addWidget(self.delete_btn)
-        self.setLayout(layout)
+        self.checkbox = ft.Checkbox(
+            label=self.task["text"],
+            value=self.task["completed"],
+            on_change=lambda e: asyncio.create_task(self.on_toggle(self.task["id"], e.control.value)),
+            fill_color=self.theme.primary,
+            check_color=self.theme.bg,
+            label_style=ft.TextStyle(
+                color=self.theme.text,
+                decoration=ft.TextDecoration.LINE_THROUGH if self.task["completed"] else ft.TextDecoration.NONE,
+                size=16
+            ),
+        )
 
-        # Simple animation on create
-        self.anim = QPropertyAnimation(self, b"windowOpacity")
-        self.anim.setDuration(300)
-        self.anim.setStartValue(0)
-        self.anim.setEndValue(1)
-        self.anim.start()
+        self.delete_btn = ft.IconButton(
+            icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+            icon_color=ft.Colors.RED_400,
+            tooltip="Delete Task",
+            on_click=lambda e: asyncio.create_task(self.on_delete(self.task["id"]))
+        )
 
-    def _toggle(self, state):
-        self.on_toggle(self.task["id"], bool(state))
-        self.update_style()
+        self.content = ft.Row(
+            [self.checkbox, self.delete_btn],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
 
-    def update_style(self):
-        color = self.theme.text if not self.task['completed'] else '#777'
-        deco = 'line-through' if self.task['completed'] else 'none'
-        self.checkbox.setStyleSheet(f"font-size: 16px; color: {color}; text-decoration: {deco};")
-
-class SettingsDialog(QDialog):
-    def __init__(self, parent, current_theme, current_bias, on_save):
-        super().__init__(parent)
-        self.setWindowTitle("Configurações")
-        self.setFixedSize(300, 200)
-
-        t = ThemeManager.get_theme(current_theme)
-        self.setStyleSheet(f"background-color: {t.bg}; color: {t.text};")
-
-        layout = QVBoxLayout()
-
-        layout.addWidget(QLabel("Escolha o Tema:"))
-        self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["Purple", "Butter", "Dynamite", "Dark"])
-        self.theme_combo.setCurrentText(current_theme.capitalize())
-        layout.addWidget(self.theme_combo)
-
-        layout.addWidget(QLabel("Seu Bias:"))
-        self.bias_combo = QComboBox()
-        self.bias_combo.addItems(["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"])
-        self.bias_combo.setCurrentText(current_bias)
-        layout.addWidget(self.bias_combo)
-
-        save_btn = QPushButton("Salvar")
-        save_btn.setCursor(Qt.PointingHandCursor)
-        save_btn.clicked.connect(lambda: on_save(self.theme_combo.currentText().lower(), self.bias_combo.currentText()))
-        save_btn.clicked.connect(self.accept)
-        layout.addWidget(save_btn)
-
-        self.setLayout(layout)
-
-class BTSApp(QMainWindow):
-    def __init__(self):
+class SettingsDrawer(ft.NavigationDrawer):
+    def __init__(self, page_ref, current_theme, current_bias, on_change_theme, on_change_bias, on_change_bg, on_change_opacity):
         super().__init__()
-        self.data_manager = DataManager()
-        self.load_data()
+        self.page_ref = page_ref
+        self.bgcolor = ft.Colors.with_opacity(0.9, "#1a0b2e")
+        self.surface_tint_color = ft.Colors.TRANSPARENT
 
-        # Setup Window
-        self.setWindowTitle("BTS To-Do List")
-        self.resize(400, 600)
-        
-        # Initialize Audio
-        try:
-            pygame.mixer.init()
-        except Exception:
-            print("Audio not available")
+        self.theme_options = [
+            ft.NavigationDrawerDestination(
+                label=t.capitalize(),
+                icon=ft.Icons.PALETTE_OUTLINED,
+                selected_icon=ft.Icons.PALETTE
+            ) for t in ["purple", "butter", "dynamite", "dark"]
+        ]
 
-        # Setup UI
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.main_layout = QVBoxLayout(self.central_widget)
-        self.main_layout.setContentsMargins(20, 20, 20, 20)
-        self.main_layout.setSpacing(15)
+        self.bias_chips = ft.Row(wrap=True, spacing=5)
+        for bias in ["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"]:
+            is_selected = (bias == current_bias)
+            self.bias_chips.controls.append(
+                ft.Chip(
+                    label=ft.Text(bias),
+                    selected=is_selected,
+                    on_select=lambda e, b=bias: asyncio.create_task(on_change_bias(b)),
+                    selected_color="#d9b3ff",
+                    check_color="#1a0b2e"
+                )
+            )
 
-        # Initialize components before applying theme
-        self.setup_header()
-        self.setup_progress()
-        self.setup_task_list()
-        self.setup_input()
+        self.controls = [
+            ft.Container(height=20),
+            ft.Text("  Configurações", size=22, weight=ft.FontWeight.BOLD, color="white"),
+            ft.Divider(color="white"),
 
-        # Overlay for celebration
-        self.overlay_label = QLabel(self)
-        self.overlay_label.setGeometry(0, 0, 400, 600)
-        self.overlay_label.setAlignment(Qt.AlignCenter)
-        self.overlay_label.setVisible(False)
-        self.overlay_label.setAttribute(Qt.WA_TransparentForMouseEvents)
+            ft.Text("  Escolha o Tema", size=16, weight=ft.FontWeight.BOLD, color="white"),
+            ft.NavigationDrawerDestination(label="Purple", icon=ft.Icons.BRUSH),
+            ft.NavigationDrawerDestination(label="Butter", icon=ft.Icons.BRUSH),
+            ft.NavigationDrawerDestination(label="Dynamite", icon=ft.Icons.BRUSH),
+            ft.NavigationDrawerDestination(label="Dark", icon=ft.Icons.BRUSH),
 
-        # Setup Movie (GIF)
-        gif_path = "resources/confetti.gif"
-        if not os.path.exists(gif_path):
-             self.overlay_label.setText("🎉 PARABÉNS! 🎉")
-             self.overlay_label.setStyleSheet("font-size: 30px; font-weight: bold; color: gold;")
-        else:
-             self.movie = QMovie(gif_path)
-             self.movie.setScaledSize(QSize(400, 600))
-             self.overlay_label.setMovie(self.movie)
+            ft.Divider(color="white"),
+            ft.Text("  Seu Bias", size=16, weight=ft.FontWeight.BOLD, color="white"),
+            ft.Container(content=self.bias_chips, padding=10),
 
-        self.apply_theme()
-        self.render_tasks()
+            ft.Divider(color="white"),
+            ft.Text("  Fundo & Transparência", size=16, weight=ft.FontWeight.BOLD, color="white"),
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("Opacidade do Painel", size=12, color="white"),
+                    ft.Slider(min=0.1, max=1.0, value=0.8, on_change=on_change_opacity),
+                    ft.ElevatedButton("Escolher Imagem de Fundo", icon=ft.Icons.IMAGE, on_click=on_change_bg)
+                ]),
+                padding=10
+            )
+        ]
+        self.on_change = lambda e: asyncio.create_task(on_change_theme(["purple", "butter", "dynamite", "dark"][e.control.selected_index]))
 
-    def load_data(self):
-        data = self.data_manager.load_data()
-        self.tasks = data.get("tasks", [])
-        self.current_theme = data.get("theme", "purple")
-        self.current_bias = data.get("bias", "V")
 
-    def save_state(self):
-        self.data_manager.save_data({
-            "tasks": self.tasks,
-            "theme": self.current_theme,
-            "bias": self.current_bias
+async def main(page: ft.Page):
+    page.title = "BTS To-Do List"
+    page.padding = 0
+    page.spacing = 0
+    page.theme_mode = ft.ThemeMode.DARK
+    page.fonts = {"Roboto": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"} # Example font loading if needed
+
+    # Initialize Managers
+    dm = DataManager()
+    data = dm.load_data()
+
+    # State
+    tasks = data.get("tasks", [])
+    current_theme = data.get("theme", "purple")
+    current_bias = data.get("bias", "V")
+    custom_bg_path = data.get("custom_bg", "") # New field
+    panel_opacity = data.get("panel_opacity", 0.8) # New field
+
+    # Audio
+    audio = ft.Audio(src="resources/success.mp3", autoplay=False)
+    page.overlay.append(audio)
+
+    # File Picker for BG
+    async def on_file_picked(e: ft.FilePickerResultEvent):
+        if e.files and len(e.files) > 0:
+            nonlocal custom_bg_path
+            custom_bg_path = e.files[0].path
+            bg_image.src = custom_bg_path
+            bg_image.opacity = 1
+            await save_state()
+            page.update()
+
+    file_picker = ft.FilePicker(on_result=on_file_picked)
+    page.overlay.append(file_picker)
+
+    # UI Components
+    bg_image = ft.Image(
+        src=custom_bg_path if custom_bg_path else ThemeManager.get_theme(current_theme).bg_image,
+        src_base64=None,
+        fit=ft.ImageFit.COVER,
+        opacity=1 if (custom_bg_path or ThemeManager.get_theme(current_theme).bg_image) else 0,
+        expand=True
+    )
+
+    celebration_gif = ft.Image(
+        src="resources/confetti.gif",
+        fit=ft.ImageFit.CONTAIN,
+        visible=False,
+        expand=True
+    )
+
+    header_text = ft.Text(f"Olá, {current_bias} Stan! 💜", size=24, weight=ft.FontWeight.BOLD)
+    progress_bar = ft.ProgressBar(value=0, height=8, border_radius=4)
+    task_column = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True)
+    new_task_input = ft.TextField(hint_text="Nova tarefa...", expand=True, border_color="transparent")
+
+    async def save_state():
+        dm.save_data({
+            "tasks": tasks,
+            "theme": current_theme,
+            "bias": current_bias,
+            "custom_bg": custom_bg_path,
+            "panel_opacity": panel_opacity
         })
 
-    def apply_theme(self):
-        self.setStyleSheet(ThemeManager.get_stylesheet(self.current_theme))
+    async def update_theme_ui(t_name):
+        nonlocal current_theme
+        current_theme = t_name
+        t = ThemeManager.get_theme(t_name)
         
-        self.header_label.setText(f"Olá, {self.current_bias} Stan! 💜")
-        self.update_progress()
-        self.repaint()
-
-    def setup_header(self):
-        header_layout = QHBoxLayout()
+        # Update colors
+        header_text.color = t.text
+        new_task_input.text_style = ft.TextStyle(color=t.text)
+        new_task_input.hint_style = ft.TextStyle(color=ft.Colors.with_opacity(0.5, t.text))
         
-        self.header_label = QLabel("Olá, Army! 💜")
-        self.header_label.setObjectName("header")
-        header_layout.addWidget(self.header_label)
+        main_card.bgcolor = ft.Colors.with_opacity(panel_opacity, t.bg)
+        fab.bgcolor = t.primary
+        fab.content.color = t.bg
         
-        self.settings_btn = QPushButton("⚙️")
-        self.settings_btn.setObjectName("settings_btn")
-        self.settings_btn.setFixedSize(40, 40)
-        self.settings_btn.setCursor(Qt.PointingHandCursor)
-        self.settings_btn.clicked.connect(self.open_settings)
-        header_layout.addWidget(self.settings_btn)
+        if not custom_bg_path:
+            bg_image.src = t.bg_image
+            bg_image.opacity = 1 if t.bg_image else 0
+
+        await render_tasks()
+        await save_state()
+        page.update()
+
+    async def update_bias(bias_name):
+        nonlocal current_bias
+        current_bias = bias_name
+        header_text.value = f"Olá, {current_bias} Stan! 💜"
+        await save_state()
+        page.update()
+
+    async def update_opacity(e):
+        nonlocal panel_opacity
+        panel_opacity = e.control.value
+        t = ThemeManager.get_theme(current_theme)
+        main_card.bgcolor = ft.Colors.with_opacity(panel_opacity, t.bg)
+        await save_state()
+        page.update()
+
+    async def render_tasks():
+        task_column.controls.clear()
+        t = ThemeManager.get_theme(current_theme)
+        sorted_tasks = sorted(tasks, key=lambda x: x["completed"])
         
-        self.main_layout.addLayout(header_layout)
-
-    def setup_progress(self):
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 100)
-        self.progress_bar.setValue(0)
-        self.progress_bar.setFormat("%p% Concluído")
-        self.progress_bar.setFixedHeight(20)
-        self.main_layout.addWidget(self.progress_bar)
-
-    def setup_task_list(self):
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_content = QWidget()
-        self.scroll_content.setObjectName("scroll_content")
-        self.scroll_layout = QVBoxLayout(self.scroll_content)
-        self.scroll_layout.setAlignment(Qt.AlignTop)
-        self.scroll_area.setWidget(self.scroll_content)
-        self.main_layout.addWidget(self.scroll_area)
-
-    def setup_input(self):
-        input_layout = QHBoxLayout()
-        
-        self.task_input = QLineEdit()
-        self.task_input.setPlaceholderText("O que vamos fazer hoje?")
-        self.task_input.returnPressed.connect(self.add_task)
-        input_layout.addWidget(self.task_input)
-        
-        add_btn = QPushButton("+")
-        add_btn.setFixedSize(40, 40)
-        add_btn.setCursor(Qt.PointingHandCursor)
-        add_btn.clicked.connect(self.add_task)
-        input_layout.addWidget(add_btn)
-
-        self.main_layout.addLayout(input_layout)
-
-    def render_tasks(self):
-        while self.scroll_layout.count():
-            child = self.scroll_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
-        sorted_tasks = sorted(self.tasks, key=lambda x: x["completed"])
-        t = ThemeManager.get_theme(self.current_theme)
-
         for task in sorted_tasks:
-            item = TaskItem(task, self.toggle_task, self.delete_task, t)
-            self.scroll_layout.addWidget(item)
+            task_column.controls.append(
+                TaskItem(task, toggle_task, delete_task, t)
+            )
+        
+        completed = sum(1 for t in tasks if t["completed"])
+        total = len(tasks)
+        progress_bar.value = completed / total if total > 0 else 0
+        progress_bar.color = t.primary
+        
+        page.update()
 
-        self.update_progress()
+    async def add_task(e):
+        if new_task_input.value:
+            tasks.append(dm.add_task(new_task_input.value))
+            new_task_input.value = ""
+            await save_state()
+            await render_tasks()
 
-    def update_progress(self):
-        total = len(self.tasks)
-        completed = sum(1 for t in self.tasks if t["completed"])
-        val = int((completed / total) * 100) if total > 0 else 0
-        self.progress_bar.setValue(val)
-
-    def add_task(self):
-        text = self.task_input.text().strip()
-        if text:
-            new_task = self.data_manager.add_task(text)
-            self.tasks.append(new_task)
-            self.save_state()
-            self.task_input.clear()
-            self.render_tasks()
-
-    def toggle_task(self, task_id, value):
-        completed_count = sum(1 for t in self.tasks if t["completed"])
-        total = len(self.tasks)
-        was_all_done = (completed_count == total and total > 0)
-
-        for task in self.tasks:
-            if task["id"] == task_id:
-                task["completed"] = value
+    async def toggle_task(tid, val):
+        for task in tasks:
+            if task["id"] == tid:
+                task["completed"] = val
                 break
-        self.save_state()
-        self.render_tasks()
+        await save_state()
+        await render_tasks()
 
-        # Check for celebration condition AFTER toggle
-        completed_count_new = sum(1 for t in self.tasks if t["completed"])
-        if value and completed_count_new == total and total > 0 and not was_all_done:
-            self.play_celebration()
+        if val and all(t["completed"] for t in tasks) and len(tasks) > 0:
+            await play_celebration()
 
-    def delete_task(self, task_id):
-        self.tasks = [t for t in self.tasks if t["id"] != task_id]
-        self.save_state()
-        self.render_tasks()
+    async def delete_task(tid):
+        nonlocal tasks
+        tasks = [t for t in tasks if t["id"] != tid]
+        await save_state()
+        await render_tasks()
 
-    def play_celebration(self):
-        try:
-            pygame.mixer.music.load("resources/success.mp3")
-            pygame.mixer.music.play()
-        except Exception as e:
-            print(f"Audio Error: {e}")
+    async def play_celebration():
+        audio.play()
+        celebration_gif.visible = True
+        page.update()
+        await asyncio.sleep(4)
+        celebration_gif.visible = False
+        page.update()
 
-        self.overlay_label.setVisible(True)
-        self.overlay_label.raise_()
+    async def open_settings(e):
+        # Rebuild drawer to ensure state is fresh? Flet handles state well.
+        # But we need custom drawer logic because NavigationDrawer is complex to update dynamically
+        # Let's simplify: Use a BottomSheet or Dialog for settings instead of a Drawer for simplicity in this version?
+        # Actually, let's use a Dialog for Settings as requested features are complex (slider, file picker)
 
-        if hasattr(self, 'movie') and self.movie:
-            self.movie.start()
+        t = ThemeManager.get_theme(current_theme)
 
-        QTimer.singleShot(4000, self.stop_celebration)
+        dlg = ft.AlertDialog(
+            title=ft.Text("Configurações"),
+            content=ft.Column([
+                ft.Text("Tema", weight="bold"),
+                ft.Dropdown(
+                    value=current_theme,
+                    options=[ft.dropdown.Option(k) for k in ThemeManager.THEMES.keys()],
+                    on_change=lambda e: asyncio.create_task(update_theme_ui(e.control.value))
+                ),
+                ft.Text("Bias", weight="bold"),
+                ft.Dropdown(
+                    value=current_bias,
+                    options=[ft.dropdown.Option(b) for b in ["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"]],
+                    on_change=lambda e: asyncio.create_task(update_bias(e.control.value))
+                ),
+                ft.Text("Transparência do Painel", weight="bold"),
+                ft.Slider(min=0.1, max=1.0, value=panel_opacity, on_change=lambda e: asyncio.create_task(update_opacity(e))),
+                ft.ElevatedButton("Escolher Fundo", on_click=lambda _: file_picker.pick_files(allow_multiple=False))
+            ], tight=True, width=300),
+            actions=[ft.TextButton("Fechar", on_click=lambda e: page.close_dialog())],
+        )
+        page.dialog = dlg
+        dlg.open = True
+        page.update()
 
-    def stop_celebration(self):
-        if hasattr(self, 'movie') and self.movie:
-            self.movie.stop()
-        self.overlay_label.setVisible(False)
+    # Main Card
+    main_card = ft.Container(
+        content=ft.Column([
+            ft.Row([header_text, ft.IconButton(ft.Icons.SETTINGS, on_click=open_settings)], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+            progress_bar,
+            ft.Divider(color="transparent"),
+            task_column,
+        ]),
+        padding=20,
+        margin=20,
+        border_radius=20,
+        blur=ft.Blur(10, 10, ft.BlurTileMode.CLAMP),
+        shadow=ft.BoxShadow(spread_radius=1, blur_radius=15, color=ft.Colors.with_opacity(0.3, "black")),
+        expand=True,
+        # Responsive width constraints
+        constraints=ft.BoxConstraints(max_width=600)
+    )
 
-    def open_settings(self):
-        def on_save(theme, bias):
-            self.update_settings(theme, bias)
+    fab = ft.FloatingActionButton(
+        icon=ft.Icons.ADD,
+        on_click=lambda e: page.show_bottom_sheet(
+            ft.BottomSheet(
+                ft.Container(
+                    ft.Column([
+                        ft.Text("Nova Tarefa", size=18, weight="bold"),
+                        ft.Row([new_task_input, ft.IconButton(ft.Icons.SEND, on_click=add_task)])
+                    ], tight=True),
+                    padding=20, bgcolor=ThemeManager.get_theme(current_theme).bg
+                )
+            )
+        )
+    )
 
-        dialog = SettingsDialog(self, self.current_theme, self.current_bias, on_save)
-        dialog.exec()
+    # Initial Render
+    await update_theme_ui(current_theme) # Applies theme colors to card
 
-    def update_settings(self, theme, bias):
-        self.current_theme = theme
-        self.current_bias = bias
-        self.save_state()
-        self.apply_theme()
-        self.render_tasks()
+    page.add(
+        ft.Stack([
+            bg_image,
+            ft.Row([main_card], alignment=ft.MainAxisAlignment.CENTER, expand=True), # Center Card
+            celebration_gif
+        ], expand=True)
+    )
+    page.floating_action_button = fab
 
-    def resizeEvent(self, event):
-        self.overlay_label.resize(self.width(), self.height())
-        if hasattr(self, 'movie') and self.movie:
-             self.movie.setScaledSize(QSize(self.width(), self.height()))
-        super().resizeEvent(event)
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = BTSApp()
-    window.show()
-    sys.exit(app.exec())
+# Ensure assets_dir is correct for packaging (relative to main.py)
+ft.app(target=main, assets_dir=".")
