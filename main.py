@@ -4,9 +4,8 @@ import os
 from data_manager import DataManager
 from theme_manager import ThemeManager
 
-# Modern Flet: Use Component class or just a function returning a Control
-# We'll use a class inheriting from ft.Container or ft.Column for composition
-class TaskItem(ft.Container):
+# Flet 0.23.2 Compatibility: Use UserControl
+class TaskItem(ft.UserControl):
     def __init__(self, task, on_toggle, on_delete, theme):
         super().__init__()
         self.task = task
@@ -14,11 +13,7 @@ class TaskItem(ft.Container):
         self.on_delete = on_delete
         self.theme = theme
 
-        self.padding = ft.padding.symmetric(horizontal=10, vertical=5)
-        self.border_radius = 10
-        self.bgcolor = ft.Colors.with_opacity(0.1, self.theme.text)
-        self.animate = ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT)
-
+    def build(self):
         self.checkbox = ft.Checkbox(
             label=self.task["text"],
             value=self.task["completed"],
@@ -39,10 +34,16 @@ class TaskItem(ft.Container):
             on_click=lambda e: asyncio.create_task(self.on_delete(self.task["id"]))
         )
 
-        self.content = ft.Row(
-            [self.checkbox, self.delete_btn],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        return ft.Container(
+            content=ft.Row(
+                [self.checkbox, self.delete_btn],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            padding=ft.padding.symmetric(horizontal=10, vertical=5),
+            border_radius=10,
+            bgcolor=ft.Colors.with_opacity(0.1, self.theme.text),
+            animate=ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT)
         )
 
 async def main(page: ft.Page):
@@ -50,7 +51,8 @@ async def main(page: ft.Page):
     page.padding = 0
     page.spacing = 0
     page.theme_mode = ft.ThemeMode.DARK
-    page.fonts = {"Roboto": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"} # Example font loading if needed
+    page.fonts = {"Roboto": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"}
+    page.theme = ft.Theme(font_family="Roboto")
 
     # Initialize Managers
     dm = DataManager()
@@ -60,10 +62,10 @@ async def main(page: ft.Page):
     tasks = data.get("tasks", [])
     current_theme = data.get("theme", "purple")
     current_bias = data.get("bias", "V")
-    custom_bg_path = data.get("custom_bg", "") # New field
-    panel_opacity = data.get("panel_opacity", 0.8) # New field
+    custom_bg_path = data.get("custom_bg", "")
+    panel_opacity = data.get("panel_opacity", 0.8)
 
-    # Audio
+    # Audio - Native in 0.23.2
     audio = ft.Audio(src="resources/success.mp3", autoplay=False)
     page.overlay.append(audio)
 
@@ -90,7 +92,7 @@ async def main(page: ft.Page):
     )
 
     celebration_gif = ft.Image(
-        src="resources/confetti.gif",
+        src="https://media.giphy.com/media/l0HlHFRbmaZtBRhXG/giphy.gif",
         fit=ft.ImageFit.CONTAIN,
         visible=False,
         expand=True
@@ -115,6 +117,10 @@ async def main(page: ft.Page):
         current_theme = t_name
         t = ThemeManager.get_theme(t_name)
         
+        # Update page theme mode and background
+        page.theme_mode = ft.ThemeMode.DARK if t.text == "#ffffff" else ft.ThemeMode.LIGHT
+        page.bgcolor = t.bg
+
         # Update colors
         header_text.color = t.text
         new_task_input.text_style = ft.TextStyle(color=t.text)
@@ -196,6 +202,10 @@ async def main(page: ft.Page):
         celebration_gif.visible = False
         page.update()
 
+    async def close_dlg(e):
+        page.dialog.open = False
+        page.update()
+
     async def open_settings(e):
         t = ThemeManager.get_theme(current_theme)
 
@@ -218,9 +228,10 @@ async def main(page: ft.Page):
                 ft.Slider(min=0.1, max=1.0, value=panel_opacity, on_change=lambda e: asyncio.create_task(update_opacity(e))),
                 ft.ElevatedButton("Escolher Fundo", on_click=lambda _: file_picker.pick_files(allow_multiple=False))
             ], tight=True, width=300),
-            actions=[ft.TextButton("Fechar", on_click=lambda e: page.close(dlg))],
+            actions=[ft.TextButton("Fechar", on_click=close_dlg)],
         )
-        page.open(dlg)
+        page.dialog = dlg
+        dlg.open = True
         page.update()
 
     # Main Card
@@ -241,19 +252,32 @@ async def main(page: ft.Page):
         constraints=ft.BoxConstraints(max_width=600)
     )
 
+    # Bottom Sheet for adding tasks
+    bottom_sheet = ft.BottomSheet(
+        ft.Container(
+            ft.Column([
+                ft.Text("Nova Tarefa", size=18, weight="bold"),
+                ft.Row([new_task_input, ft.IconButton(ft.Icons.SEND, on_click=lambda e: asyncio.create_task(add_task_from_sheet(e)))])
+            ], tight=True),
+            padding=20, bgcolor=ThemeManager.get_theme(current_theme).bg
+        )
+    )
+
+    async def open_add_task_sheet(e):
+        # Update sheet color if theme changed
+        bottom_sheet.content.bgcolor = ThemeManager.get_theme(current_theme).bg
+        page.bottom_sheet = bottom_sheet
+        bottom_sheet.open = True
+        page.update()
+
+    async def add_task_from_sheet(e):
+        await add_task(e)
+        bottom_sheet.open = False
+        page.update()
+
     fab = ft.FloatingActionButton(
         icon=ft.Icons.ADD,
-        on_click=lambda e: page.open(
-            ft.BottomSheet(
-                ft.Container(
-                    ft.Column([
-                        ft.Text("Nova Tarefa", size=18, weight="bold"),
-                        ft.Row([new_task_input, ft.IconButton(ft.Icons.SEND, on_click=add_task)])
-                    ], tight=True),
-                    padding=20, bgcolor=ThemeManager.get_theme(current_theme).bg
-                )
-            )
-        )
+        on_click=open_add_task_sheet
     )
 
     # Initial Render
