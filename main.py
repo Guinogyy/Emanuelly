@@ -33,13 +33,6 @@ class TaskItem(ft.Container):
         )
 
         self.delete_btn = ft.IconButton(
-            icon=ft.icons.DELETE_OUTLINE_ROUNDED, # Standard icons are often still accessed via uppercase in some versions, but requested snake_case.
-            # Actually, typically ft.icons.DELETE_OUTLINE_ROUNDED is an alias or property.
-            # If strict snake_case is required: ft.icons.delete_outline_rounded (if it exists) or just generic strings.
-            # I will assume standard Flet 0.21+ snake_case properties: ft.icons.DELETE_OUTLINE_ROUNDED -> ft.icons.DELETE_OUTLINE_ROUNDED?
-            # Wait, usually it is ft.icons.ADD not ft.icons.add in Python constants.
-            # BUT the user said: "ex: ft.colors.red_400, ft.icons.add". Explicitly lowercase.
-            # I will use lowercase constants.
             icon=ft.icons.delete_outline_rounded,
             icon_color=ft.colors.red_400,
             tooltip="Delete Task",
@@ -85,7 +78,8 @@ async def main(page: ft.Page):
             await save_state()
             page.update()
 
-    file_picker = ft.FilePicker(on_result=on_file_picked)
+    file_picker = ft.FilePicker()
+    file_picker.on_result = on_file_picked
     page.overlay.append(file_picker)
 
     # UI Components
