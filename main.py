@@ -45,63 +45,6 @@ class TaskItem(ft.Container):
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
-class SettingsDrawer(ft.NavigationDrawer):
-    def __init__(self, page_ref, current_theme, current_bias, on_change_theme, on_change_bias, on_change_bg, on_change_opacity):
-        super().__init__()
-        self.page_ref = page_ref
-        self.bgcolor = ft.Colors.with_opacity(0.9, "#1a0b2e")
-        self.surface_tint_color = ft.Colors.TRANSPARENT
-
-        self.theme_options = [
-            ft.NavigationDrawerDestination(
-                label=t.capitalize(),
-                icon=ft.Icons.PALETTE_OUTLINED,
-                selected_icon=ft.Icons.PALETTE
-            ) for t in ["purple", "butter", "dynamite", "dark"]
-        ]
-
-        self.bias_chips = ft.Row(wrap=True, spacing=5)
-        for bias in ["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"]:
-            is_selected = (bias == current_bias)
-            self.bias_chips.controls.append(
-                ft.Chip(
-                    label=ft.Text(bias),
-                    selected=is_selected,
-                    on_select=lambda e, b=bias: asyncio.create_task(on_change_bias(b)),
-                    selected_color="#d9b3ff",
-                    check_color="#1a0b2e"
-                )
-            )
-
-        self.controls = [
-            ft.Container(height=20),
-            ft.Text("  Configurações", size=22, weight=ft.FontWeight.BOLD, color="white"),
-            ft.Divider(color="white"),
-
-            ft.Text("  Escolha o Tema", size=16, weight=ft.FontWeight.BOLD, color="white"),
-            ft.NavigationDrawerDestination(label="Purple", icon=ft.Icons.BRUSH),
-            ft.NavigationDrawerDestination(label="Butter", icon=ft.Icons.BRUSH),
-            ft.NavigationDrawerDestination(label="Dynamite", icon=ft.Icons.BRUSH),
-            ft.NavigationDrawerDestination(label="Dark", icon=ft.Icons.BRUSH),
-
-            ft.Divider(color="white"),
-            ft.Text("  Seu Bias", size=16, weight=ft.FontWeight.BOLD, color="white"),
-            ft.Container(content=self.bias_chips, padding=10),
-
-            ft.Divider(color="white"),
-            ft.Text("  Fundo & Transparência", size=16, weight=ft.FontWeight.BOLD, color="white"),
-            ft.Container(
-                content=ft.Column([
-                    ft.Text("Opacidade do Painel", size=12, color="white"),
-                    ft.Slider(min=0.1, max=1.0, value=0.8, on_change=on_change_opacity),
-                    ft.ElevatedButton("Escolher Imagem de Fundo", icon=ft.Icons.IMAGE, on_click=on_change_bg)
-                ]),
-                padding=10
-            )
-        ]
-        self.on_change = lambda e: asyncio.create_task(on_change_theme(["purple", "butter", "dynamite", "dark"][e.control.selected_index]))
-
-
 async def main(page: ft.Page):
     page.title = "BTS To-Do List"
     page.padding = 0
@@ -254,11 +197,6 @@ async def main(page: ft.Page):
         page.update()
 
     async def open_settings(e):
-        # Rebuild drawer to ensure state is fresh? Flet handles state well.
-        # But we need custom drawer logic because NavigationDrawer is complex to update dynamically
-        # Let's simplify: Use a BottomSheet or Dialog for settings instead of a Drawer for simplicity in this version?
-        # Actually, let's use a Dialog for Settings as requested features are complex (slider, file picker)
-
         t = ThemeManager.get_theme(current_theme)
 
         dlg = ft.AlertDialog(
@@ -280,10 +218,9 @@ async def main(page: ft.Page):
                 ft.Slider(min=0.1, max=1.0, value=panel_opacity, on_change=lambda e: asyncio.create_task(update_opacity(e))),
                 ft.ElevatedButton("Escolher Fundo", on_click=lambda _: file_picker.pick_files(allow_multiple=False))
             ], tight=True, width=300),
-            actions=[ft.TextButton("Fechar", on_click=lambda e: page.close_dialog())],
+            actions=[ft.TextButton("Fechar", on_click=lambda e: page.close(dlg))],
         )
-        page.dialog = dlg
-        dlg.open = True
+        page.open(dlg)
         page.update()
 
     # Main Card
@@ -306,7 +243,7 @@ async def main(page: ft.Page):
 
     fab = ft.FloatingActionButton(
         icon=ft.Icons.ADD,
-        on_click=lambda e: page.show_bottom_sheet(
+        on_click=lambda e: page.open(
             ft.BottomSheet(
                 ft.Container(
                     ft.Column([

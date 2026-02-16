@@ -10,7 +10,7 @@ Este guia explica como transformar seu aplicativo Flet em um arquivo `.apk` para
 
 ## Passo a Passo
 
-1.  **Instale o Flet Mobile Tools**:
+1.  **Instale o Flet**:
     Abra seu terminal e rode:
     ```bash
     pip install flet
@@ -27,8 +27,6 @@ Este guia explica como transformar seu aplicativo Flet em um arquivo `.apk` para
         foto.jfif
         success.mp3
         confetti.gif
-      assets/ (opcional, se quiser ícone do app)
-        icon.png
     ```
 
 3.  **Compile para APK**:
@@ -36,7 +34,7 @@ Este guia explica como transformar seu aplicativo Flet em um arquivo `.apk` para
     ```bash
     flet build apk
     ```
-    *Dica: Se quiser um ícone personalizado, adicione `--product "BTS To-Do"` e coloque um `icon.png` na pasta `assets`.*
+    *Dica: Se quiser um ícone personalizado, adicione `--product "BTS To-Do"` e coloque um `icon.png` na pasta `assets` (se criar uma).*
 
 4.  **Localize o APK**:
     Após o processo terminar (pode demorar alguns minutos na primeira vez), o arquivo estará em:
@@ -47,5 +45,5 @@ Este guia explica como transformar seu aplicativo Flet em um arquivo `.apk` para
 
 ## Solução de Problemas Comuns
 
-*   **"Assets not found"**: Verifique se a pasta `resources` está na mesma pasta que `main.py`.
-*   **App fecha ao abrir**: Conecte o celular via USB e rode `flet run --android` para ver os logs de erro no terminal.
+*   **"Assets not found"**: O código usa `assets_dir="."` no `main.py`, o que significa que ele busca as pastas `resources/` na raiz. Certifique-se de que você está rodando o comando `flet build apk` na mesma pasta onde está o `main.py`.
+*   **Deprecation Warnings**: O código foi atualizado para usar a API moderna do Flet (v0.21+), mas avisos podem aparecer dependendo da versão exata do compilador. Eles geralmente não impedem o funcionamento.
