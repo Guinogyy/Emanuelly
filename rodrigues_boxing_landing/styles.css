@@ -1,96 +1,97 @@
-/* Base animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Custom CSS Variables */
+:root {
+    --gold: #FFD700;
+    --gold-light: #FFEA70;
+    --gold-dark: #B8860B;
+    --black: #050505;
+    --black-light: #111111;
 }
 
-.animate-fade-in-up {
-    animation: fadeInUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    opacity: 0;
+/* Tailwind configuration overrides using standard CSS for specific elements */
+.text-gold { color: var(--gold); }
+.bg-gold { background-color: var(--gold); }
+.border-gold { border-color: var(--gold); }
+
+.bg-black { background-color: var(--black); }
+.bg-black-light { background-color: var(--black-light); }
+
+/* Custom utility classes */
+.text-transparent {
+    color: transparent;
+}
+.bg-clip-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+}
+.from-gold { --tw-gradient-from: var(--gold); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 215, 0, 0)); }
+.to-gold-light { --tw-gradient-to: var(--gold-light); }
+
+/* Scroll Behavior */
+html {
+    scroll-behavior: smooth;
 }
 
-@keyframes pulseSlow {
-    0%, 100% {
-        opacity: 0.1;
-        transform: scale(0.9);
-    }
-    50% {
-        opacity: 0.3;
-        transform: scale(1.1);
-    }
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--black);
+}
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-dark);
 }
 
-.animate-pulse-slow {
-    animation: pulseSlow 4s ease-in-out infinite;
+/* Selection */
+::selection {
+    background: var(--gold);
+    color: var(--black);
 }
 
-/* Punch-like entry animations for scroll reveals */
-.reveal-up, .reveal-left, .reveal-right {
-    opacity: 0;
-    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* Floating Animation */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
 }
 
+.logo-float {
+    animation: float 6s ease-in-out infinite;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Reveal Animations */
 .reveal-up {
+    opacity: 0;
     transform: translateY(50px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
 }
 
 .reveal-left {
+    opacity: 0;
     transform: translateX(-50px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
 }
 
 .reveal-right {
+    opacity: 0;
     transform: translateX(50px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
 }
 
-.reveal-up.active, .reveal-left.active, .reveal-right.active {
+.reveal-up.active,
+.reveal-left.active,
+.reveal-right.active {
     opacity: 1;
     transform: translate(0);
 }
 
-/* Logo specific animations - The "Gloves shake and glow" */
-@keyframes punchShake {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-    20% { transform: translate(-3px, 0px) rotate(1deg); }
-    30% { transform: translate(3px, 2px) rotate(0deg); }
-    40% { transform: translate(1px, -1px) rotate(1deg); }
-    50% { transform: translate(-1px, 2px) rotate(-1deg); }
-    60% { transform: translate(-3px, 1px) rotate(0deg); }
-    70% { transform: translate(3px, 1px) rotate(-1deg); }
-    80% { transform: translate(-1px, -1px) rotate(1deg); }
-    90% { transform: translate(1px, 2px) rotate(0deg); }
-    100% { transform: translate(1px, -2px) rotate(-1deg); }
-}
-
-.rodrigues-logo {
-    transition: filter 0.3s ease, transform 0.3s ease;
-}
-
-.logo-container:hover .rodrigues-logo {
-    animation: punchShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-    filter: drop-shadow(0 0 25px rgba(255, 165, 0, 0.9)) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
-    transform: scale(1.02);
-}
-
-.logo-container:hover .logo-glow {
-    opacity: 0.5;
-    transform: scale(1.2);
-    transition: all 0.3s ease;
-}
-
-/* Service cards hover effects - subtle gold shine */
-.service-card {
-    position: relative;
-    overflow: hidden;
-}
-
-.service-card::after {
+/* Button Glitch/Shine Effect */
+.gold-btn::after {
     content: '';
     position: absolute;
     top: -50%;
@@ -98,33 +99,18 @@
     width: 200%;
     height: 200%;
     background: linear-gradient(
-        to right,
+        to bottom right,
         rgba(255, 255, 255, 0) 0%,
-        rgba(255, 165, 0, 0.05) 50%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 60%,
         rgba(255, 255, 255, 0) 100%
     );
-    transform: rotate(30deg);
-    transition: all 0.5s ease;
-    opacity: 0;
+    transform: rotate(30deg) translate(-100%, -100%);
+    transition: all 0.8s ease;
+    z-index: 1;
 }
 
-.service-card:hover::after {
-    opacity: 1;
-    left: 100%;
-}
-
-/* WhatsApp Button Pulse */
-@keyframes whatsappPulse {
-    0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
-    70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
-}
-
-.whatsapp-btn:hover {
-    animation: whatsappPulse 1.5s infinite;
-}
-
-/* Smooth scrolling for anchor links */
-html {
-    scroll-behavior: smooth;
+.gold-btn:hover::after {
+    transform: rotate(30deg) translate(100%, 100%);
 }
