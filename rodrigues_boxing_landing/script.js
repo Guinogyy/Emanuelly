@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const popupContent = `
             <div style="text-align: center;">
                 <b style="font-size: 14px; text-transform: uppercase;">REDFIT Parque São Jorge</b><br>
-                <span style="font-size: 12px; color: #ccc;">Dentro do Clube Corinthians</span><br>
+                <span style="font-size: 12px; color: #ccc;">Unidade Fixa de Atendimento</span><br>
                 <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 10px; background: #FFD700; color: #000; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase;">Abrir no Google Maps</a>
             </div>
         `;
