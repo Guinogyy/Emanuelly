@@ -116,3 +116,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- Map Initialization ---
+document.addEventListener('DOMContentLoaded', () => {
+    // REDFIT - Parque São Jorge coordinates
+    const lat = -23.525656;
+    const lng = -46.565451;
+
+    // Initialize the map if the container exists
+    const mapContainer = document.getElementById('map');
+    if (mapContainer && typeof L !== 'undefined') {
+        const map = L.map('map', {
+            zoomControl: false,
+            scrollWheelZoom: false // Prevent accidental zooming when scrolling the page
+        }).setView([lat, lng], 15);
+
+        // Add zoom control to bottom right so it doesn't overlap text
+        L.control.zoom({
+            position: 'bottomright'
+        }).addTo(map);
+
+        // Use CartoDB Dark Matter tiles for a premium dark look
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Create custom gold glowing marker
+        const goldIcon = L.divIcon({
+            className: 'gold-marker',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        // Add marker and popup
+        const marker = L.marker([lat, lng], {icon: goldIcon}).addTo(map);
+
+        // Custom popup content with a link to open Google Maps
+        const popupContent = `
+            <div style="text-align: center;">
+                <b style="font-size: 14px; text-transform: uppercase;">REDFIT Parque São Jorge</b><br>
+                <span style="font-size: 12px; color: #ccc;">Dentro do Clube Corinthians</span><br>
+                <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 10px; background: #FFD700; color: #000; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase;">Abrir no Google Maps</a>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent);
+
+        // Optional: Open popup by default when map comes into view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        marker.openPopup();
+                        map.invalidateSize(); // Fix tile loading if container was hidden
+                    }, 500);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        observer.observe(mapContainer);
+    }
+});
