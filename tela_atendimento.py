@@ -30,7 +30,7 @@ class TelaAtendimento(ft.Container):
         )
 
         self.btn_finalizar = ft.ElevatedButton(
-            text="FINALIZAR PEDIDO",
+            content=ft.Text("FINALIZAR PEDIDO"),
             icon=ft.Icons.CHECK_CIRCLE,
             bgcolor=ft.Colors.GREEN_600,
             color=ft.Colors.WHITE,

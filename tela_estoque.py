@@ -9,7 +9,7 @@ class TelaEstoque(ft.Container):
         self.insumos_list = ft.Column(spacing=15, expand=True, scroll=ft.ScrollMode.AUTO)
 
         self.btn_atualizar_estoque = ft.ElevatedButton(
-            text="Definir Estoque Inicial",
+            content=ft.Text("Definir Estoque Inicial"),
             icon=ft.Icons.EDIT_DOCUMENT,
             on_click=self.mostrar_modal_estoque,
             style=ft.ButtonStyle(

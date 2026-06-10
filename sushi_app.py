@@ -49,4 +49,4 @@ def main(page: ft.Page):
     page.add(main_container)
 
 if __name__ == "__main__":
-    ft.run(main)
+    ft.app(target=main)
