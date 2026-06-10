@@ -1,0 +1,61 @@
+{
+    "insumos": {
+        "salmao": {
+            "nome": "Salmão (g)",
+            "total": 5000,
+            "usado": 400
+        },
+        "arroz": {
+            "nome": "Arroz (g)",
+            "total": 10000,
+            "usado": 600
+        },
+        "alga": {
+            "nome": "Alga (folhas)",
+            "total": 100,
+            "usado": 5
+        },
+        "cream_cheese": {
+            "nome": "Cream Cheese (g)",
+            "total": 2000,
+            "usado": 100
+        }
+    },
+    "combos": {
+        "combo_casal": {
+            "nome": "Combo Casal (40 peças)",
+            "receita": {
+                "salmao": 400,
+                "arroz": 600,
+                "alga": 5,
+                "cream_cheese": 100
+            }
+        },
+        "combinado_especial": {
+            "nome": "Combinado Especial (60 peças)",
+            "receita": {
+                "salmao": 600,
+                "arroz": 800,
+                "alga": 8,
+                "cream_cheese": 150
+            }
+        },
+        "temaki_salmao": {
+            "nome": "Temaki de Salmão",
+            "receita": {
+                "salmao": 80,
+                "arroz": 100,
+                "alga": 1,
+                "cream_cheese": 30
+            }
+        }
+    },
+    "pedidos": [
+        {
+            "endereco": "Rua A",
+            "itens": {
+                "combo_casal": 1
+            }
+        }
+    ]
+}
