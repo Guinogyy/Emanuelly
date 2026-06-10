@@ -107,8 +107,8 @@ class TelaEstoque(ft.Container):
         dialog = ft.AlertDialog(
             content=ft.Column(content_controls, scroll=ft.ScrollMode.AUTO, tight=True),
             actions=[
-                ft.TextButton("Cancelar", on_click=lambda e: self.page.close_dialog()),
-                ft.TextButton("Salvar", on_click=salvar, style=ft.ButtonStyle(color=ft.Colors.GREEN))
+                ft.TextButton(content="Cancelar", on_click=lambda e: self.page.close_dialog()),
+                ft.TextButton(content="Salvar", on_click=salvar, style=ft.ButtonStyle(color=ft.Colors.GREEN))
             ]
         )
         self.page.dialog = dialog
