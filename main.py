@@ -371,4 +371,4 @@ def main(page: ft.Page):
     )
     page.floating_action_button = fab
 
-ft.app(target=main, assets_dir=".")
+ft.run(main, assets_dir=".")
