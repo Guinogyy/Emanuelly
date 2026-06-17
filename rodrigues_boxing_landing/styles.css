@@ -1,0 +1,146 @@
+/* Custom CSS Variables */
+:root {
+    --gold: #FFD700;
+    --gold-light: #FFEA70;
+    --gold-dark: #B8860B;
+    --black: #050505;
+    --black-light: #111111;
+}
+
+/* Tailwind configuration overrides using standard CSS for specific elements */
+.text-gold { color: var(--gold); }
+.bg-gold { background-color: var(--gold); }
+.border-gold { border-color: var(--gold); }
+
+.bg-black { background-color: var(--black); }
+.bg-black-light { background-color: var(--black-light); }
+
+/* Custom utility classes */
+.text-transparent {
+    color: transparent;
+}
+.bg-clip-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+}
+.from-gold { --tw-gradient-from: var(--gold); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 215, 0, 0)); }
+.to-gold-light { --tw-gradient-to: var(--gold-light); }
+
+/* Scroll Behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--black);
+}
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-dark);
+}
+
+/* Selection */
+::selection {
+    background: var(--gold);
+    color: var(--black);
+}
+
+/* Floating Animation */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
+
+.logo-float {
+    animation: float 6s ease-in-out infinite;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Reveal Animations */
+.reveal-up {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+
+.reveal-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+
+.reveal-right {
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+
+.reveal-up.active,
+.reveal-left.active,
+.reveal-right.active {
+    opacity: 1;
+    transform: translate(0);
+}
+
+/* Button Glitch/Shine Effect */
+.gold-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 60%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg) translate(-100%, -100%);
+    transition: all 0.8s ease;
+    z-index: 1;
+}
+
+.gold-btn:hover::after {
+    transform: rotate(30deg) translate(100%, 100%);
+}
+
+/* Leaflet Map Customizations */
+.gold-marker {
+    background-color: #FFD700;
+    border: 2px solid #000;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    animation: markerPulse 2s infinite;
+}
+
+@keyframes markerPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(255, 215, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+    }
+}
+
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background: #111 !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+.leaflet-popup-content b {
+    color: #FFD700;
+}

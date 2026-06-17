@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rodrigues Boxing - Personal Fight Exclusivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-black text-white font-montserrat antialiased overflow-x-hidden">
+
+    <!-- Header / Nav -->
+    <header class="fixed w-full z-50 transition-all duration-300 backdrop-blur-md bg-black/80 border-b border-gold/10">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="assets/logo.jpeg" alt="Rodrigues Boxing Logo" class="w-12 h-12 object-cover aspect-square rounded-full shadow-[0_0_15px_rgba(255,165,0,0.3)]">
+                <span class="text-gold font-black text-xl tracking-wider uppercase">Rodrigues <span class="text-white">Boxing</span></span>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden text-gold hover:text-white transition-colors" id="mobile-menu-btn">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex gap-8 items-center text-sm font-semibold tracking-wide uppercase">
+                <a href="#about" class="hover:text-gold transition-colors duration-300">O Coach</a>
+                <a href="#methodology" class="hover:text-gold transition-colors duration-300">Metodologia</a>
+                <a href="#location" class="hover:text-gold transition-colors duration-300">Local</a>
+                <a href="#events" class="hover:text-gold transition-colors duration-300">Eventos</a>
+                <a href="#faq" class="hover:text-gold transition-colors duration-300">FAQ</a>
+            </nav>
+        </div>
+
+        <!-- Mobile Nav Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-black-light border-b border-gold/20 absolute w-full left-0">
+            <div class="flex flex-col px-4 py-6 space-y-4 text-center font-bold uppercase tracking-widest">
+                <a href="#about" class="block py-2 hover:text-gold">O Coach</a>
+                <a href="#methodology" class="block py-2 hover:text-gold">Metodologia</a>
+                <a href="#location" class="block py-2 hover:text-gold">Local</a>
+                <a href="#events" class="block py-2 hover:text-gold">Eventos</a>
+                <a href="#faq" class="block py-2 hover:text-gold">FAQ</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- WhatsApp Data setup -->
+    <script>
+        const waNumber = "5511977675413";
+        const waMessage = encodeURIComponent("Olá! Vi o site do Rodrigues Boxing e quero saber os horários disponíveis para o treino individual.");
+        const waLink = `https://wa.me/${waNumber}?text=${waMessage}`;
+    </script>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <!-- Background Overlay / Particles -->
+        <div class="absolute inset-0 z-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMzMzIi8+PC9zdmc+')]"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-[80%] max-w-4xl bg-gold opacity-[0.03] blur-[150px] rounded-full z-0 pointer-events-none"></div>
+
+        <div class="container mx-auto px-4 z-10 text-center flex flex-col items-center">
+
+            <div class="mb-8 relative group cursor-pointer hero-logo-container">
+                <div class="absolute inset-0 bg-gold blur-2xl opacity-20 group-hover:opacity-60 transition-opacity duration-700 rounded-full"></div>
+                <img src="assets/logo.jpeg" alt="Elite Boxing Ant" class="w-48 md:w-64 aspect-square object-cover relative z-10 rounded-full border-2 border-transparent group-hover:border-gold transition-colors duration-500 shadow-2xl logo-float">
+            </div>
+
+            <h1 class="text-4xl md:text-7xl font-black mb-4 tracking-tighter uppercase leading-tight drop-shadow-lg text-white">
+                Mude seu Corpo,<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-light">Domine a Arte.</span>
+            </h1>
+
+            <p class="text-lg md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto font-light">
+                Treinamento <strong class="text-white">individual e exclusivo</strong> focado na sua evolução e alta performance.
+            </p>
+
+            <a href="#" onclick="window.open(waLink, '_blank')" class="gold-btn group relative inline-flex items-center justify-center px-10 py-5 font-bold text-black uppercase tracking-widest bg-gold rounded-sm overflow-hidden transform hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(255,165,0,0.4)] hover:shadow-[0_0_50px_rgba(255,165,0,0.6)]">
+                <span class="absolute w-0 h-0 transition-all duration-500 ease-out bg-white rounded-full group-hover:w-80 group-hover:h-56 opacity-10"></span>
+                <span class="relative flex items-center gap-2">
+                    Agendar Aula Experimental
+                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </span>
+            </a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="pt-24 bg-black-light relative border-t border-gold/10 overflow-hidden">
+        <div class="container mx-auto px-4 h-full">
+            <div class="flex flex-col lg:flex-row items-stretch gap-12 h-full">
+                <!-- Image container pushed to bottom -->
+                <div class="lg:w-1/2 reveal-left relative flex items-end">
+                    <div class="relative w-full translate-y-[1px]"> <!-- 1px overlap to ensure no white line -->
+                        <img src="assets/coach4.jpeg" alt="Coach Rodrigues" class="relative z-10 w-full block rounded-t-xl shadow-2xl object-cover aspect-[3/4] border-t border-x border-gray-800 border-b-0">
+                    </div>
+                </div>
+
+                <div class="lg:w-1/2 reveal-right pb-24 flex flex-col justify-center">
+                    <h2 class="text-3xl md:text-5xl font-black mb-6 uppercase tracking-wide">
+                        GABRIEL <span class="text-gold">RODRIGUES</span>
+                    </h2>
+                    <div class="space-y-6 text-gray-300 text-lg leading-relaxed">
+                        <p>
+                            Não é só treino. É mentalidade, técnica de verdade e um acompanhamento que ninguém mais te oferece.
+                        </p>
+                        <p>
+                            Muitos te dão um saco de pancada e mandam bater. Aqui, você aprende a arte que molda campeões.
+                        </p>
+                        <p>
+                            Com a experiência prática dos ringues de alta performance, trago a essência e a disciplina do esporte de elite para cada sessão.
+                        </p>
+                        <p>
+                            Do aquecimento à explosão final, o foco é construir o seu melhor shape, destravar sua confiança e te ensinar o boxe raiz, o boxe de verdade.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methodology Section -->
+    <section id="methodology" class="py-24 bg-black relative">
+        <div class="container mx-auto px-4 z-10 relative">
+            <div class="text-center mb-16 reveal-up">
+                <h2 class="text-3xl md:text-5xl font-black mb-4 uppercase tracking-wide">
+                    Como <span class="text-gold">Funciona</span>
+                </h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">Um modelo de treinamento moldado para o seu resultado máximo.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="bg-black-light border border-gold/20 p-8 rounded-xl group hover:border-gold transition-all duration-300 reveal-up shadow-lg">
+                    <div class="text-gold mb-6">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">100% Presencial e 1v1</h3>
+                    <p class="text-gray-400">Atenção exclusiva. Cada movimento é corrigido, cada sequência é focada na sua mecânica. Sem distrações, apenas você e o coach.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-gradient-to-b from-black-light to-black border border-gold p-8 rounded-xl md:-translate-y-4 group transition-all duration-300 reveal-up shadow-[0_0_30px_rgba(255,165,0,0.1)] relative">
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gold text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Alto Gasto Calórico</div>
+                    <div class="text-gold mb-6">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Condicionamento Brutal</h3>
+                    <p class="text-gray-400">Derreta gordura, construa músculos resistentes e melhore seu fôlego ao nível de um lutador. Resultados visíveis em poucas semanas.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-black-light border border-gold/20 p-8 rounded-xl group hover:border-gold transition-all duration-300 reveal-up shadow-lg">
+                    <div class="text-gold mb-6">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Saúde Mental Blindada</h3>
+                    <p class="text-gray-400">Boxe é terapia de impacto. Libere o estresse, aumente sua autoconfiança e saia do ringue pronto para enfrentar a rotina.</p>
+                </div>
+            </div>
+
+            <div class="mt-16 text-center reveal-up">
+                <a href="#" onclick="window.open(waLink, '_blank')" class="inline-flex items-center gap-2 border-2 border-gold text-gold font-bold uppercase tracking-widest px-8 py-4 hover:bg-gold hover:text-black transition-all duration-300">
+                    Consultar Valores e Horários
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location Section -->
+    <section id="location" class="py-24 bg-black-light border-y border-gold/10">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center gap-12 bg-black p-8 md:p-12 rounded-2xl border border-gray-800 reveal-up">
+                <div class="md:w-1/2">
+                    <h2 class="text-3xl md:text-5xl font-black mb-6 uppercase tracking-wide">
+                        Onde <span class="text-gold">Treinamos</span>
+                    </h2>
+                    <p class="text-gray-300 text-lg mb-8">
+                        Treine com a máxima conveniência: no conforto da academia do seu condomínio ou com horário agendado na nossa base fixa.
+                    </p>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="text-gold mt-1">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-xl">REDFIT - Parque São Jorge</h4>
+                                <p class="text-gray-400">R. São Jorge, Nº 777 - Tatuapé, São Paulo - SP</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 w-full h-64 md:h-96 bg-gray-900 rounded-xl overflow-hidden relative border border-gold/20 z-0">
+                    <!-- Leaflet Map Container -->
+                    <div id="map" class="absolute inset-0 z-0"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Events Section -->
+    <section id="events" class="py-24 bg-black relative">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-5xl font-black mb-12 uppercase tracking-wide reveal-up">
+                Próximos <span class="text-gold">Combates</span>
+            </h2>
+
+            <!-- Events Placeholder -->
+            <div class="max-w-4xl mx-auto bg-black-light border border-gold/20 rounded-xl p-8 md:p-12 reveal-up relative overflow-hidden">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMjIyIi8+PC9zdmc+')] opacity-50 z-0"></div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div class="w-16 h-16 bg-gold/10 text-gold rounded-full flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Sem Eventos Programados</h3>
+                    <p class="text-gray-400 max-w-lg mx-auto">
+                        Atualmente estou focado no atendimento exclusivo dos meus alunos particulares. Fique ligado no meu Instagram para atualizações sobre os próximos aulões e treinos coletivos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-24 bg-black-light border-t border-gold/10">
+        <div class="container mx-auto px-4 max-w-3xl">
+            <div class="text-center mb-12 reveal-up">
+                <h2 class="text-3xl md:text-5xl font-black mb-4 uppercase tracking-wide">
+                    Dúvidas <span class="text-gold">Frequentes</span>
+                </h2>
+            </div>
+
+            <div class="space-y-4 reveal-up">
+                <!-- FAQ Item 1 -->
+                <div class="faq-item bg-black border border-gray-800 rounded-lg overflow-hidden transition-all duration-300">
+                    <button class="faq-btn w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none">
+                        <span class="font-bold text-lg text-white">Nunca fiz boxe, o treino é pra mim?</span>
+                        <svg class="faq-icon w-6 h-6 text-gold transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-content max-h-0 overflow-hidden transition-all duration-300 bg-black-light">
+                        <p class="px-6 pb-5 text-gray-300">
+                            Absolutamente. O treinamento 1v1 é desenhado para o seu nível. Vamos construir sua base do zero com técnica apurada, sem pular etapas.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="faq-item bg-black border border-gray-800 rounded-lg overflow-hidden transition-all duration-300">
+                    <button class="faq-btn w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none">
+                        <span class="font-bold text-lg text-white">Preciso levar equipamento?</span>
+                        <svg class="faq-icon w-6 h-6 text-gold transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-content max-h-0 overflow-hidden transition-all duration-300 bg-black-light">
+                        <p class="px-6 pb-5 text-gray-300">
+                            Para a aula experimental, eu forneço as luvas. Para os treinos regulares, recomendo ter sua própria bandagem e luva por questões de higiene e performance, mas eu te oriento na compra.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="faq-item bg-black border border-gray-800 rounded-lg overflow-hidden transition-all duration-300">
+                    <button class="faq-btn w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none">
+                        <span class="font-bold text-lg text-white">Preciso ser sócio do clube Corinthians para treinar na REDFIT?</span>
+                        <svg class="faq-icon w-6 h-6 text-gold transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="faq-content max-h-0 overflow-hidden transition-all duration-300 bg-black-light">
+                        <p class="px-6 pb-5 text-gray-300">
+                            Não! O treinamento na REDFIT Parque São Jorge é aberto ao público. Você não precisa ser sócio do clube para treinar comigo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA & Footer -->
+    <section class="py-24 bg-black relative overflow-hidden border-t border-gold/20">
+        <!-- Glow effect background -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-3xl bg-gold opacity-5 blur-[120px] rounded-full pointer-events-none"></div>
+
+        <div class="container mx-auto px-4 text-center relative z-10 reveal-up">
+            <h2 class="text-4xl md:text-6xl font-black mb-6 uppercase">
+                A hora é <span class="text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-light">Agora.</span>
+            </h2>
+            <p class="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+                As vagas para o treinamento presencial são estritamente limitadas. Agende e garanta seu lugar no ringue.
+            </p>
+
+            <a href="#" onclick="window.open(waLink, '_blank')" class="inline-flex items-center gap-3 bg-[#25D366] text-white font-bold text-xl py-5 px-10 rounded-full hover:bg-[#1ebd5a] transition-all duration-300 transform shadow-[0_0_20px_rgba(37,211,102,0.4)] hover:scale-105 animate-pulse">
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                Chamar no WhatsApp
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-black py-8 border-t border-gray-900 text-center text-gray-600 text-sm">
+        <div class="container mx-auto px-4">
+            <p>&copy; 2024 Rodrigues Boxing. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS for Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="script.js"></script>
+</body>
+</html>
